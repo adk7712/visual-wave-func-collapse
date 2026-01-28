@@ -1,6 +1,6 @@
 #include <iostream>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL.h>
+#include <SDL_image.h>
 
 #include "app.hpp"
 
@@ -15,13 +15,14 @@ int main(int argc, char* argv[]) {
     Params par;
     par.winWidth = 1280;
     par.winHeight = 720;
-    par.tileSize = 16;
+    par.tileSize = 20;
 
     App app;
     app.init(par.winWidth, par.winHeight);
     app.initTiles(par.tileSize);
 
     bool running = true;
+    bool showPattern = false; // Added to persist the pattern on screen
     SDL_Event e;
 
     const float deltaTime = 0.01f;
@@ -48,7 +49,7 @@ int main(int argc, char* argv[]) {
                     if (e.key.keysym.sym == SDLK_RETURN) {
                         app.clear();
                         app.mapTiles();
-                        app.showTiles();
+                        showPattern = true; // Trigger persistence
                     }
                 }
 
@@ -57,13 +58,19 @@ int main(int argc, char* argv[]) {
         }
         const float alpha = accumulator / deltaTime;
 
+        // Rendering logic moved here to run every frame
+        if (showPattern) {
+            app.showTiles();
+        }
+
         app.display();
 
+        int targetTicks = 1000 / app.getRefreshRate();
         int frameTicks = SDL_GetTicks() - startTicks;
-        if (frameTicks < (1000 / app.getRefreshRate())) {
-            SDL_Delay(1000 / (app.getRefreshRate() - frameTicks));
+        if (frameTicks < targetTicks) {
+            SDL_Delay(targetTicks - frameTicks);
         }
     }
-    
+
     return app.close();
 }
